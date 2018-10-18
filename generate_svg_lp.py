@@ -102,7 +102,7 @@ def get_testing_batch():
     while True:
         for sequence in test_loader:
             batch = utils.normalize_data(opt, dtype, sequence)
-            yield batch 
+            yield batch
 testing_batch_generator = get_testing_batch()
 
 # --------- eval funtions ------------------------------------
@@ -117,21 +117,21 @@ def make_gifs(x, idx, name):
     for i in range(1, opt.n_eval):
         h = encoder(x_in)
         h_target = encoder(x[i])[0].detach()
-        if opt.last_frame_skip or i < opt.n_past:	
+        if opt.last_frame_skip or i < opt.n_past:
             h, skip = h
         else:
             h, _ = h
         h = h.detach()
         _, z_t, _= posterior(h_target) # take the mean
         if i < opt.n_past:
-            frame_predictor(torch.cat([h, z_t], 1)) 
+            frame_predictor(torch.cat([h, z_t], 1))
             posterior_gen.append(x[i])
             x_in = x[i]
         else:
             h_pred = frame_predictor(torch.cat([h, z_t], 1)).detach()
             x_in = decoder([h_pred, skip]).detach()
             posterior_gen.append(x_in)
-  
+
 
     nsample = opt.nsample
     ssim = np.zeros((opt.batch_size, nsample, opt.n_future))
@@ -150,7 +150,7 @@ def make_gifs(x, idx, name):
         all_gen[s].append(x_in)
         for i in range(1, opt.n_eval):
             h = encoder(x_in)
-            if opt.last_frame_skip or i < opt.n_past:	
+            if opt.last_frame_skip or i < opt.n_past:
                 h, skip = h
             else:
                 h, _ = h
@@ -213,7 +213,7 @@ def add_border(x, color, pad=1):
     nc = x.size()[0]
     px = Variable(torch.zeros(3, w+2*pad+30, w+2*pad))
     if color == 'red':
-        px[0] =0.7 
+        px[0] =0.7
     elif color == 'green':
         px[1] = 0.7
     if nc == 1:

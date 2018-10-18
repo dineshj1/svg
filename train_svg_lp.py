@@ -100,9 +100,9 @@ else:
 
 if opt.model == 'dcgan':
     if opt.image_width == 64:
-        import models.dcgan_64 as model 
+        import models.dcgan_64 as model
     elif opt.image_width == 128:
-        import models.dcgan_128 as model  
+        import models.dcgan_128 as model
 elif opt.model == 'vgg':
     if opt.image_width == 64:
         import models.vgg_64 as model
@@ -110,7 +110,7 @@ elif opt.model == 'vgg':
         import models.vgg_128 as model
 else:
     raise ValueError('Unknown model: %s' % opt.model)
-       
+
 if opt.model_dir != '':
     decoder = saved_model['decoder']
     encoder = saved_model['encoder']
@@ -129,11 +129,11 @@ decoder_optimizer = opt.optimizer(decoder.parameters(), lr=opt.lr, betas=(opt.be
 # --------- loss functions ------------------------------------
 mse_criterion = nn.MSELoss()
 def kl_criterion(mu1, logvar1, mu2, logvar2):
-    # KL( N(mu_1, sigma2_1) || N(mu_2, sigma2_2)) = 
+    # KL( N(mu_1, sigma2_1) || N(mu_2, sigma2_2)) =
     #   log( sqrt(
-    # 
-    sigma1 = logvar1.mul(0.5).exp() 
-    sigma2 = logvar2.mul(0.5).exp() 
+    #
+    sigma1 = logvar1.mul(0.5).exp()
+    sigma2 = logvar2.mul(0.5).exp()
     kld = torch.log(sigma2/sigma1) + (torch.exp(logvar1) + (mu1 - mu2)**2)/(2*torch.exp(logvar2)) - 1/2
     return kld.sum() / opt.batch_size
 
@@ -172,12 +172,12 @@ def get_testing_batch():
     while True:
         for sequence in test_loader:
             batch = utils.normalize_data(opt, dtype, sequence)
-            yield batch 
+            yield batch
 testing_batch_generator = get_testing_batch()
 
 # --------- plotting funtions ------------------------------------
 def plot(x, epoch):
-    nsample = 20 
+    nsample = 20
     gen_seq = [[] for i in range(nsample)]
     gt_seq = [x[i] for i in range(len(x))]
 
@@ -189,7 +189,7 @@ def plot(x, epoch):
         x_in = x[0]
         for i in range(1, opt.n_eval):
             h = encoder(x_in)
-            if opt.last_frame_skip or i < opt.n_past:	
+            if opt.last_frame_skip or i < opt.n_past:
                 h, skip = h
             else:
                 h, _ = h
@@ -213,13 +213,14 @@ def plot(x, epoch):
     nrow = min(opt.batch_size, 10)
     for i in range(nrow):
         # ground truth sequence
-        row = [] 
+        row = []
         for t in range(opt.n_eval):
             row.append(gt_seq[t][i])
         to_plot.append(row)
 
         # best sequence
         min_mse = 1e7
+        min_idx = -1
         for s in range(nsample):
             mse = 0
             for t in range(opt.n_eval):
@@ -247,10 +248,10 @@ def plot(x, epoch):
                 row.append(gen_seq[s][t][i])
             gifs[t].append(row)
 
-    fname = '%s/gen/sample_%d.png' % (opt.log_dir, epoch) 
+    fname = '%s/gen/sample_%d.png' % (opt.log_dir, epoch)
     utils.save_tensors_image(fname, to_plot)
 
-    fname = '%s/gen/sample_%d.gif' % (opt.log_dir, epoch) 
+    fname = '%s/gen/sample_%d.gif' % (opt.log_dir, epoch)
     utils.save_gif(fname, gifs)
 
 
@@ -263,7 +264,7 @@ def plot_rec(x, epoch):
     for i in range(1, opt.n_past+opt.n_future):
         h = encoder(x[i-1])
         h_target = encoder(x[i])
-        if opt.last_frame_skip or i < opt.n_past:	
+        if opt.last_frame_skip or i < opt.n_past:
             h, skip = h
         else:
             h, _ = h
@@ -272,21 +273,21 @@ def plot_rec(x, epoch):
         h_target = h_target.detach()
         z_t, _, _= posterior(h_target)
         if i < opt.n_past:
-            frame_predictor(torch.cat([h, z_t], 1)) 
+            frame_predictor(torch.cat([h, z_t], 1))
             gen_seq.append(x[i])
         else:
             h_pred = frame_predictor(torch.cat([h, z_t], 1))
             x_pred = decoder([h_pred, skip]).detach()
             gen_seq.append(x_pred)
-   
+
     to_plot = []
     nrow = min(opt.batch_size, 10)
     for i in range(nrow):
         row = []
         for t in range(opt.n_past+opt.n_future):
-            row.append(gen_seq[t][i]) 
+            row.append(gen_seq[t][i])
         to_plot.append(row)
-    fname = '%s/gen/rec_%d.png' % (opt.log_dir, epoch) 
+    fname = '%s/gen/rec_%d.png' % (opt.log_dir, epoch)
     utils.save_tensors_image(fname, to_plot)
 
 
@@ -308,7 +309,7 @@ def train(x):
     for i in range(1, opt.n_past+opt.n_future):
         h = encoder(x[i-1])
         h_target = encoder(x[i])[0]
-        if opt.last_frame_skip or i < opt.n_past:	
+        if opt.last_frame_skip or i < opt.n_past:
             h, skip = h
         else:
             h = h[0]
@@ -345,7 +346,7 @@ for epoch in range(opt.niter):
         progress.update(i+1)
         x = next(training_batch_generator)
 
-        # train frame_predictor 
+        # train frame_predictor
         mse, kld = train(x)
         epoch_mse += mse
         epoch_kld += kld
@@ -362,7 +363,7 @@ for epoch in range(opt.niter):
     #decoder.eval()
     posterior.eval()
     prior.eval()
-    
+
     x = next(testing_batch_generator)
     plot(x, epoch)
     plot_rec(x, epoch)
@@ -378,5 +379,5 @@ for epoch in range(opt.niter):
         '%s/model.pth' % opt.log_dir)
     if epoch % 10 == 0:
         print('log dir: %s' % opt.log_dir)
-        
+
 

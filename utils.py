@@ -42,7 +42,7 @@ def load_dataset(opt):
                 deterministic=False,
                 num_digits=opt.num_digits)
     elif opt.dataset == 'bair':
-        from data.bair import RobotPush 
+        from data.bair import RobotPush
         train_data = RobotPush(
                 data_root=opt.data_root,
                 train=True,
@@ -54,18 +54,22 @@ def load_dataset(opt):
                 seq_len=opt.n_eval,
                 image_size=opt.image_width)
     elif opt.dataset == 'kth':
-        from data.kth import KTH 
+        from data.kth import KTH
         train_data = KTH(
-                train=True, 
+                train=True,
                 data_root=opt.data_root,
-                seq_len=opt.n_past+opt.n_future, 
+                seq_len=opt.n_past+opt.n_future,
                 image_size=opt.image_width)
         test_data = KTH(
-                train=False, 
+                train=False,
                 data_root=opt.data_root,
-                seq_len=opt.n_eval, 
+                seq_len=opt.n_eval,
                 image_size=opt.image_width)
-    
+    elif opt.dataset == 'picker':
+        from data.picker import picker
+        train_data = picker(phase='train')
+        test_data = picker(phase='val')
+
     return train_data, test_data
 
 def sequence_input(seq, dtype):
@@ -149,7 +153,7 @@ def make_image(tensor):
         tensor = tensor.expand(3, tensor.size(1), tensor.size(2))
     # pdb.set_trace()
     return scipy.misc.toimage(tensor.numpy(),
-                              high=255*tensor.max(),
+                              high=255*tensor.max().item(),
                               channel_axis=0)
 
 def draw_text_tensor(tensor, text):
@@ -260,7 +264,7 @@ def fspecial_gauss(size, sigma):
     x, y = np.mgrid[-size//2 + 1:size//2 + 1, -size//2 + 1:size//2 + 1]
     g = np.exp(-((x**2 + y**2)/(2.0*sigma**2)))
     return g/g.sum()
-  
+
 def finn_ssim(img1, img2, cs_map=False):
     img1 = img1.astype(np.float64)
     img2 = img2.astype(np.float64)
@@ -282,7 +286,7 @@ def finn_ssim(img1, img2, cs_map=False):
     sigma12 = signal.fftconvolve(img1*img2, window, mode='valid') - mu1_mu2
     if cs_map:
         return (((2*mu1_mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*
-                    (sigma1_sq + sigma2_sq + C2)), 
+                    (sigma1_sq + sigma2_sq + C2)),
                 (2.0*sigma12 + C2)/(sigma1_sq + sigma2_sq + C2))
     else:
         return ((2*mu1_mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*
