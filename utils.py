@@ -215,6 +215,9 @@ def eval_seq(gt, pred):
     ssim = np.zeros((bs, T))
     psnr = np.zeros((bs, T))
     mse = np.zeros((bs, T))
+    errL1_pertime = np.zeros((bs, T, T))  # for each sample, for each prediction, its error w.r.t each ground truth frame
+    min_over_t_errL1 = np.zeros((bs, T))
+    best_time = np.zeros((bs, T))
     for i in range(bs):
         for t in range(T):
             for c in range(gt[t][i].shape[0]):
@@ -223,8 +226,14 @@ def eval_seq(gt, pred):
             ssim[i, t] /= gt[t][i].shape[0]
             psnr[i, t] /= gt[t][i].shape[0]
             mse[i, t] = mse_metric(gt[t][i], pred[t][i])
+            for tprime in range(T):
+                errL1_pertime[i, t, tprime] = np.abs(gt[tprime][i] - pred[t][i]).mean()
+            best_time[i, t] = np.argmin(errL1_pertime[i, t])
+            min_over_t_errL1[i, t] = errL1_pertime[i, t, int(best_time[i, t])]
 
-    return mse, ssim, psnr
+    best_time = best_time + 1
+
+    return mse, ssim, psnr, min_over_t_errL1, best_time
 
 # ssim function used in Babaeizadeh et al. (2017), Fin et al. (2016), etc.
 def finn_eval_seq(gt, pred):

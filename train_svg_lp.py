@@ -229,16 +229,16 @@ def plot(x, epoch):
                 min_mse = mse
                 min_idx = s
 
-        s_list = [min_idx, 
-                  np.random.randint(nsample), 
-                  np.random.randint(nsample), 
-                  np.random.randint(nsample), 
+        s_list = [min_idx,
+                  np.random.randint(nsample),
+                  np.random.randint(nsample),
+                  np.random.randint(nsample),
                   np.random.randint(nsample)]
         for ss in range(len(s_list)):
             s = s_list[ss]
             row = []
             for t in range(opt.n_eval):
-                row.append(gen_seq[s][t][i]) 
+                row.append(gen_seq[s][t][i])
             to_plot.append(row)
         for t in range(opt.n_eval):
             row = []
@@ -317,8 +317,8 @@ def train(x):
         _, mu_p, logvar_p = prior(h)
         h_pred = frame_predictor(torch.cat([h, z_t], 1))
         x_pred = decoder([h_pred, skip])
-        mse += mse_criterion(x_pred, x[i])
-        kld += kl_criterion(mu, logvar, mu_p, logvar_p)
+        mse += mse_criterion(x_pred, x[i])  #TODO must become time-agnostic
+        kld += kl_criterion(mu, logvar, mu_p, logvar_p)  #TODO may need to become time-agnostic
 
     loss = mse + kld*opt.beta
     loss.backward()

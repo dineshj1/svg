@@ -1,0 +1,6 @@
+* TODO implement TAP together with SVG
+ - [ ] Implement min-over-t for mse alone.
+   - [ ] Sanity-check by switching off vae, and comparing min-over-t version against non-min-over-t version
+ - [ ] Implement min-over-t for kl divergence + mse combined.
+   - [ ] allow a hyperparameter that controls how many random time samples to compute min-over-t over for KL divergence.
+ - [ ] Implement min-over-t for mse alone, but let vae encoder see entire video
